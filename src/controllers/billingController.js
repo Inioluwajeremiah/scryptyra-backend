@@ -334,31 +334,52 @@ exports.handleWebhook = async (req, res) => {
 
 // paystack
 exports.handlePaystackWebhook = async (req, res) => {
-  const event = req.body;
+  try {
+    const event = req.body;
 
-  if (event.event === "charge.success") {
-    const data = event.data;
+    console.log("handlePaystackWebhook event===>>> ", event);
 
-    const userId = data.metadata.userId;
-    const plan = data.metadata.plan;
+    if (event.event === "charge.success") {
+      const data = event.data;
 
-    const user = await User.findById(userId);
+      const userId = data?.metadata?.userId;
+      const plan = data?.metadata?.plan;
 
-    if (!user) return res.sendStatus(200);
+      if (!userId || !plan) {
+        console.warn("Missing metadata in Paystack webhook");
+        return res.sendStatus(200);
+      }
 
-    user.plan = plan;
-    user.subscriptionStatus = "active";
+      const user = await User.findById(userId);
 
-    sendEmail(
-      user.email,
-      "subscriptionStarted",
-      user.name,
-      planInfo.plan,
-      planInfo.interval
-    ).catch(() => {});
+      if (!user) {
+        console.warn("User not found for Paystack webhook:", userId);
+        return res.sendStatus(200);
+      }
 
-    await user.save({ validateBeforeSave: false });
+      user.plan = plan;
+      user.subscriptionStatus = "active";
+
+      // fire-and-forget email (don’t block webhook)
+      sendEmail(
+        user.email,
+        "subscriptionStarted",
+        user.name,
+        planInfo.plan,
+        planInfo.interval
+      ).catch((err) => {
+        console.error("Email failed:", err.message);
+      });
+
+      await user.save({ validateBeforeSave: false });
+    }
+
+    // Always respond 200 so Paystack doesn't retry endlessly
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("Paystack webhook error:", err);
+
+    // IMPORTANT: still return 200 to prevent retries spam
+    res.sendStatus(200);
   }
-
-  res.sendStatus(200);
 };
