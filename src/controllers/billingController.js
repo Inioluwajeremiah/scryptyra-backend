@@ -333,53 +333,119 @@ exports.handleWebhook = async (req, res) => {
 };
 
 // paystack
+const crypto = require("crypto");
+
 exports.handlePaystackWebhook = async (req, res) => {
   try {
-    const event = req.body;
+    // 🔐 Verify Paystack signature (IMPORTANT)
+    const hash = crypto
+      .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY)
+      .update(JSON.stringify(req.body))
+      .digest("hex");
 
-    console.log("handlePaystackWebhook event===>>> ", event);
-
-    if (event.event === "charge.success") {
-      const data = event.data;
-
-      const userId = data?.metadata?.userId;
-      const plan = data?.metadata?.plan;
-
-      if (!userId || !plan) {
-        console.warn("Missing metadata in Paystack webhook");
-        return res.sendStatus(200);
-      }
-
-      const user = await User.findById(userId);
-
-      if (!user) {
-        console.warn("User not found for Paystack webhook:", userId);
-        return res.sendStatus(200);
-      }
-
-      user.plan = plan;
-      user.subscriptionStatus = "active";
-
-      // fire-and-forget email (don’t block webhook)
-      sendEmail(
-        user.email,
-        "subscriptionStarted",
-        user.name,
-        planInfo.plan,
-        planInfo.interval
-      ).catch((err) => {
-        console.error("Email failed:", err.message);
-      });
-
-      await user.save({ validateBeforeSave: false });
+    if (hash !== req.headers["x-paystack-signature"]) {
+      console.warn("Invalid Paystack signature");
+      return res.sendStatus(401);
     }
 
-    // Always respond 200 so Paystack doesn't retry endlessly
+    const event = req.body;
+
+    console.log("Paystack event ===>>>", event.event);
+
+    const data = event.data;
+    const email = data?.customer?.email;
+
+    if (!email) return res.sendStatus(200);
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      console.warn("User not found:", email);
+      return res.sendStatus(200);
+    }
+
+    // ─────────────────────────────────────────────
+    // 🔁 HANDLE EVENTS
+    // ─────────────────────────────────────────────
+
+    switch (event.event) {
+      // ✅ PAYMENT SUCCESS (initial + recurring)
+      case "charge.success": {
+        const planName = data?.plan?.name?.toLowerCase() || "";
+        const interval = data?.plan?.interval || null;
+
+        // map plan name → your enum
+        let mappedPlan = "free";
+        if (planName.includes("writer")) mappedPlan = "writer";
+        else if (planName.includes("pro")) mappedPlan = "pro";
+        else if (planName.includes("studio")) mappedPlan = "studio";
+
+        user.plan = mappedPlan;
+        user.billingInterval =
+          interval === "annually" ? "annual" : interval || null;
+
+        user.subscriptionStatus = "active";
+
+        // estimate next renewal date
+        if (interval === "annually") {
+          user.currentPeriodEnd = new Date(
+            Date.now() + 365 * 24 * 60 * 60 * 1000
+          );
+        } else if (interval === "monthly") {
+          user.currentPeriodEnd = new Date(
+            Date.now() + 30 * 24 * 60 * 60 * 1000
+          );
+        }
+
+        user.cancelAtPeriodEnd = false;
+
+        sendEmail(
+          user.email,
+          "subscriptionStarted",
+          user.name,
+          mappedPlan,
+          user.billingInterval
+        ).catch(() => {});
+
+        break;
+      }
+
+      // ❌ PAYMENT FAILED
+      case "invoice.payment_failed": {
+        user.subscriptionStatus = "past_due";
+        break;
+      }
+
+      // 🔁 SUBSCRIPTION CREATED
+      case "subscription.create": {
+        user.subscriptionStatus = "active";
+        break;
+      }
+
+      // ❌ SUBSCRIPTION DISABLED / CANCELED
+      case "subscription.disable": {
+        user.subscriptionStatus = "canceled";
+        user.cancelAtPeriodEnd = true;
+        break;
+      }
+
+      // 🔄 SUBSCRIPTION NOT RENEWED
+      case "subscription.not_renew": {
+        user.subscriptionStatus = "canceled";
+        user.cancelAtPeriodEnd = true;
+        break;
+      }
+
+      default:
+        console.log("Unhandled Paystack event:", event.event);
+    }
+
+    await user.save({ validateBeforeSave: false });
+
+    // ✅ Always return 200
     res.sendStatus(200);
   } catch (err) {
     console.error("Paystack webhook error:", err);
-
-    // IMPORTANT: still return 200 to prevent retries spam
     res.sendStatus(200);
   }
 };
