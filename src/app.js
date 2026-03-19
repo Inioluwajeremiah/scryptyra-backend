@@ -22,7 +22,7 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(
   cors({
     origin: [
-      process.env.CLIENT_URL || "http://localhost:3000",
+      process.env.CLIENT_URL || "https://scryptyra.openhorizoninnovations.com",
       "http://localhost:3001",
       "http://localhost:3002",
       "http://localhost:3003",
