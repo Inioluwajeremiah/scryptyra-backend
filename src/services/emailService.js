@@ -10,7 +10,9 @@ function getTransporter() {
     port: Number(process.env.SMTP_PORT) || 587,
     secure: Number(process.env.SMTP_PORT) === 465,
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    pool: true, maxConnections: 5, maxMessages: 100,
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
   });
   return _transporter;
 }
@@ -27,7 +29,11 @@ function htmlWrapper(heroLabel, heroTitle, heroSub, content, preheader = "") {
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>SCRYPTYRA</title>
-${preheader ? `<span style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;">${preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</span>` : ""}
+${
+  preheader
+    ? `<span style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;">${preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;</span>`
+    : ""
+}
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -203,7 +209,6 @@ h2 em{font-style:normal;color:#ff6b35}
 
 // ─── Templates ────────────────────────────────────────────
 const templates = {
-
   welcome: (name) => ({
     subject: `Welcome to SCRYPTYRA, ${name} — Your story starts now ✦`,
     html: htmlWrapper(
@@ -295,7 +300,9 @@ const templates = {
         </div>
         <div class="info-row">
           <span class="info-key">Device</span>
-          <span class="info-val">${userAgent ? userAgent.slice(0, 90) : "Unknown"}</span>
+          <span class="info-val">${
+            userAgent ? userAgent.slice(0, 90) : "Unknown"
+          }</span>
         </div>
       </div>
       <div class="alert alert-ok">
@@ -313,12 +320,16 @@ const templates = {
         </div>
       </div>
       <div class="btn-row">
-        <a href="${process.env.APP_URL}/login" class="btn">Secure My Account →</a>
+        <a href="${
+          process.env.APP_URL
+        }/login" class="btn">Secure My Account →</a>
       </div>
       `,
       `New sign-in to your account from ${ipAddress || "unknown IP"}.`
     ),
-    text: `New sign-in to SCRYPTYRA at ${new Date().toUTCString()} from IP ${ipAddress || "Unknown"}. Not you? Reset your password: ${process.env.APP_URL}/login`,
+    text: `New sign-in to SCRYPTYRA at ${new Date().toUTCString()} from IP ${
+      ipAddress || "Unknown"
+    }. Not you? Reset your password: ${process.env.APP_URL}/login`,
   }),
 
   passwordChanged: (name) => ({
@@ -399,35 +410,53 @@ const templates = {
         <div class="sc-glow"></div>
         <div class="sc-eyebrow">Screenplay</div>
         <div class="sc-title">"${scriptTitle}"</div>
-        <div class="sc-meta">Shared by ${senderName}<span>·</span>SCRYPTYRA<span>·</span>${new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div>
+        <div class="sc-meta">Shared by ${senderName}<span>·</span>SCRYPTYRA<span>·</span>${new Date().toLocaleDateString(
+        "en-US",
+        { month: "short", day: "numeric", year: "numeric" }
+      )}</div>
       </div>
       <div class="btn-row">
         <a href="${shareUrl}" class="btn">Read the Script →</a>
       </div>
-      <p class="note">You need a SCRYPTYRA account to view this script. <a href="${process.env.APP_URL}/signup">Create one free →</a></p>
+      <p class="note">You need a SCRYPTYRA account to view this script. <a href="${
+        process.env.APP_URL
+      }/signup">Create one free →</a></p>
       `,
       `${senderName} shared "${scriptTitle}" with you.`
     ),
     text: `${senderName} shared "${scriptTitle}" with you on SCRYPTYRA. View it at: ${shareUrl}`,
   }),
 
-
   subscriptionStarted: (name, plan, interval) => ({
-    subject: `Welcome to Scryptyra ${plan.charAt(0).toUpperCase()+plan.slice(1)} — You're all set`,
+    subject: `Welcome to Scryptyra ${
+      plan.charAt(0).toUpperCase() + plan.slice(1)
+    } — You're all set`,
     html: htmlWrapper(
       "Subscription Active",
-      `You're on ${plan.charAt(0).toUpperCase()+plan.slice(1)}.`,
+      `You're on ${plan.charAt(0).toUpperCase() + plan.slice(1)}.`,
       "Your subscription is live. All features unlocked.",
       `
       <div class="eyebrow">Subscription Confirmed</div>
-      <h2>Welcome to <em>${plan.charAt(0).toUpperCase()+plan.slice(1)},</em> ${name}.</h2>
-      <p class="lead">Your ${plan.charAt(0).toUpperCase()+plan.slice(1)} plan is now active.</p>
+      <h2>Welcome to <em>${
+        plan.charAt(0).toUpperCase() + plan.slice(1)
+      },</em> ${name}.</h2>
+      <p class="lead">Your ${
+        plan.charAt(0).toUpperCase() + plan.slice(1)
+      } plan is now active.</p>
       <div class="info-card">
-        <div class="info-row"><span class="info-key">Plan</span><span class="info-val">${plan.charAt(0).toUpperCase()+plan.slice(1)}</span></div>
-        <div class="info-row"><span class="info-key">Billing</span><span class="info-val">${interval === "annual" ? "Annual (billed once a year)" : "Monthly"}</span></div>
+        <div class="info-row"><span class="info-key">Plan</span><span class="info-val">${
+          plan.charAt(0).toUpperCase() + plan.slice(1)
+        }</span></div>
+        <div class="info-row"><span class="info-key">Billing</span><span class="info-val">${
+          interval === "annual" ? "Annual (billed once a year)" : "Monthly"
+        }</span></div>
       </div>
-      <div class="btn-row"><a href="${process.env.APP_URL}/dashboard" class="btn">Start Writing</a></div>
-      <p class="note">Manage your subscription at <a href="${process.env.APP_URL}/billing">scryptyra.app/billing</a></p>
+      <div class="btn-row"><a href="${
+        process.env.APP_URL
+      }/dashboard" class="btn">Start Writing</a></div>
+      <p class="note">Manage your subscription at <a href="${
+        process.env.APP_URL
+      }/billing">scryptyra.app/billing</a></p>
       `,
       `Your Scryptyra ${plan} plan is now active.`
     ),
@@ -520,8 +549,13 @@ const sendEmail = async (to, template, ...args) => {
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     });
     const info = await transporter.sendMail({
-      from: `"${process.env.EMAIL_FROM_NAME || "SCRYPTYRA"}" <${process.env.EMAIL_FROM_ADDRESS}>`,
-      to, subject, html, text,
+      from: `"${process.env.EMAIL_FROM_NAME || "SCRYPTYRA"}" <${
+        process.env.EMAIL_FROM_ADDRESS
+      }>`,
+      to,
+      subject,
+      html,
+      text,
     });
     logger.info(`Email sent: ${template} → ${to} [${info.messageId}]`);
     return info;
@@ -537,7 +571,9 @@ const verifyEmailConnection = async () => {
     await getTransporter().verify();
     logger.info("Email transporter ready.");
   } catch (err) {
-    logger.warn(`Email transporter not ready: ${err.message}. Check SMTP credentials.`);
+    logger.warn(
+      `Email transporter not ready: ${err.message}. Check SMTP credentials.`
+    );
   }
 };
 

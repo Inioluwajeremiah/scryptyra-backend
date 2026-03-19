@@ -34,14 +34,14 @@ let server;
     // Start HTTP server
     server = app.listen(PORT, () => {
       logger.info(`
-╔═══════════════════════════════════════════╗
-║          FADE IN — API Server             ║
-╠═══════════════════════════════════════════╣
-║  Port    : ${String(PORT).padEnd(31)}║
-║  Env     : ${(process.env.NODE_ENV || "development").padEnd(31)}║
-║  DB      : MongoDB connected              ║
-╚═══════════════════════════════════════════╝
-      `);
+      ╔═══════════════════════════════════════════╗
+      ║          Scryptyra — API Server             ║
+      ╠═══════════════════════════════════════════╣
+      ║  Port    : ${String(PORT).padEnd(31)}║
+      ║  Env     : ${(process.env.NODE_ENV || "development").padEnd(31)}║
+      ║  DB      : MongoDB connected              ║
+      ╚═══════════════════════════════════════════╝
+            `);
     });
 
     process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));

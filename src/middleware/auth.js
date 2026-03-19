@@ -1,7 +1,7 @@
-const { verifyToken } = require('../utils/token');
-const User = require('../models/User');
-const AppError = require('../utils/AppError');
-const logger = require('../utils/logger');
+const { verifyToken } = require("../utils/token");
+const User = require("../models/User");
+const AppError = require("../utils/AppError");
+const logger = require("../utils/logger");
 
 /**
  * Protect — verifies the JWT httpOnly cookie and attaches req.user.
@@ -11,8 +11,12 @@ const protect = async (req, res, next) => {
     // 1. Extract token from httpOnly cookie
     const token = req.cookies?.fadein_token;
 
-    if (!token || token === 'logged_out') {
-      return next(new AppError('You are not logged in. Please sign in to continue.', 401));
+    console.log("token from protect ===>>> ", token);
+
+    if (!token || token === "logged_out") {
+      return next(
+        new AppError("You are not logged in. Please sign in to continue.", 401)
+      );
     }
 
     // 2. Verify token
@@ -20,21 +24,33 @@ const protect = async (req, res, next) => {
     try {
       decoded = verifyToken(token);
     } catch (err) {
-      if (err.name === 'TokenExpiredError') {
-        return next(new AppError('Your session has expired. Please sign in again.', 401));
+      if (err.name === "TokenExpiredError") {
+        return next(
+          new AppError("Your session has expired. Please sign in again.", 401)
+        );
       }
-      return next(new AppError('Invalid session. Please sign in again.', 401));
+      return next(new AppError("Invalid session. Please sign in again.", 401));
     }
 
     // 3. Check user still exists
     const user = await User.findById(decoded.id);
     if (!user) {
-      return next(new AppError('The account associated with this session no longer exists.', 401));
+      return next(
+        new AppError(
+          "The account associated with this session no longer exists.",
+          401
+        )
+      );
     }
 
     // 4. Check if password was changed after token was issued
     if (user.changedPasswordAfter(decoded.iat)) {
-      return next(new AppError('Your password was recently changed. Please sign in again.', 401));
+      return next(
+        new AppError(
+          "Your password was recently changed. Please sign in again.",
+          401
+        )
+      );
     }
 
     // 5. Attach user to request
@@ -42,7 +58,7 @@ const protect = async (req, res, next) => {
     next();
   } catch (err) {
     logger.error(`Auth middleware error: ${err.message}`);
-    next(new AppError('Authentication failed. Please sign in again.', 401));
+    next(new AppError("Authentication failed. Please sign in again.", 401));
   }
 };
 
@@ -52,7 +68,9 @@ const protect = async (req, res, next) => {
 const restrictTo = (...plans) => {
   return (req, res, next) => {
     if (!plans.includes(req.user.plan)) {
-      return next(new AppError('You do not have permission to perform this action.', 403));
+      return next(
+        new AppError("You do not have permission to perform this action.", 403)
+      );
     }
     next();
   };

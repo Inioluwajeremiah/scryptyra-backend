@@ -1,6 +1,6 @@
-const Script = require('../models/Script');
-const AppError = require('../utils/AppError');
-const logger = require('../utils/logger');
+const Script = require("../models/Script");
+const AppError = require("../utils/AppError");
+const logger = require("../utils/logger");
 
 /**
  * GET /api/scripts
@@ -8,12 +8,15 @@ const logger = require('../utils/logger');
  */
 exports.getScripts = async (req, res, next) => {
   try {
-    const scripts = await Script.find({ userId: req.user._id, isArchived: false })
+    const scripts = await Script.find({
+      userId: req.user._id,
+      isArchived: false,
+    })
       .sort({ updatedAt: -1 })
-      .select('-blocks'); // exclude heavy blocks from list view
+      .select("-blocks"); // exclude heavy blocks from list view
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       results: scripts.length,
       data: { scripts },
     });
@@ -34,11 +37,11 @@ exports.getScript = async (req, res, next) => {
     });
 
     if (!script) {
-      return next(new AppError('Script not found.', 404));
+      return next(new AppError("Script not found.", 404));
     }
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: { script },
     });
   } catch (err) {
@@ -55,18 +58,21 @@ exports.createScript = async (req, res, next) => {
     const { title, blocks } = req.body;
 
     const script = await Script.create({
-      title: title || 'Untitled Screenplay',
+      title: title || "Untitled Screenplay",
       userId: req.user._id,
       blocks: blocks || [
-        { type: 'scene', content: 'INT. COFFEE SHOP - DAY' },
-        { type: 'action', content: 'The morning rush. Steam rises from a hundred cups.' },
+        { type: "scene", content: "INT. COFFEE SHOP - DAY" },
+        {
+          type: "action",
+          content: "The morning rush. Steam rises from a hundred cups.",
+        },
       ],
     });
 
     logger.info(`Script created: "${script.title}" by ${req.user.email}`);
 
     res.status(201).json({
-      status: 'success',
+      status: "success",
       data: { script },
     });
   } catch (err) {
@@ -82,8 +88,11 @@ exports.updateScript = async (req, res, next) => {
   try {
     const { title, blocks } = req.body;
 
-    const script = await Script.findOne({ _id: req.params.id, userId: req.user._id });
-    if (!script) return next(new AppError('Script not found.', 404));
+    const script = await Script.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+    });
+    if (!script) return next(new AppError("Script not found.", 404));
 
     if (title !== undefined) script.title = title;
     if (blocks !== undefined) script.blocks = blocks;
@@ -91,7 +100,7 @@ exports.updateScript = async (req, res, next) => {
     await script.save(); // triggers pre-save hook to recalc stats
 
     res.status(200).json({
-      status: 'success',
+      status: "success",
       data: { script },
     });
   } catch (err) {
@@ -110,11 +119,11 @@ exports.deleteScript = async (req, res, next) => {
       userId: req.user._id,
     });
 
-    if (!script) return next(new AppError('Script not found.', 404));
+    if (!script) return next(new AppError("Script not found.", 404));
 
     logger.info(`Script deleted: "${script.title}" by ${req.user.email}`);
 
-    res.status(204).json({ status: 'success', data: null });
+    res.status(204).json({ status: "success", data: null });
   } catch (err) {
     next(err);
   }
@@ -132,9 +141,9 @@ exports.archiveScript = async (req, res, next) => {
       { new: true }
     );
 
-    if (!script) return next(new AppError('Script not found.', 404));
+    if (!script) return next(new AppError("Script not found.", 404));
 
-    res.status(200).json({ status: 'success', data: { script } });
+    res.status(200).json({ status: "success", data: { script } });
   } catch (err) {
     next(err);
   }
