@@ -11,7 +11,7 @@ const signAndSetCookie = (res, userId) => {
   const cookieOptions = {
     httpOnly: true, // JS cannot read this cookie
     secure: process.env.NODE_ENV === "production", // HTTPS only in prod
-    sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     maxAge:
       Number(process.env.JWT_COOKIE_EXPIRES_DAYS || 7) * 24 * 60 * 60 * 1000,
     path: "/",
