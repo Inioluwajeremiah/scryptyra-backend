@@ -57,7 +57,7 @@ const PLANS = {
   // },
   writer: {
     label: "Writer",
-    price: { monthly: 7000, annual: 60000 }, // $8/mo billed annually
+    price: { monthly: 7000, annual: 60000 },
     scripts: Infinity,
     maxPages: Infinity,
     aiRequests: 0,
