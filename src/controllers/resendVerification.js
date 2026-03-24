@@ -7,12 +7,12 @@ exports.resendVerification = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
 
-    if (!user) return next(new AppError('User not found.', 404));
+    if (!user) return next(new AppError("User not found.", 404));
 
     if (user.isEmailVerified) {
       return res.status(200).json({
-        status: 'success',
-        message: 'Your email is already verified.',
+        status: "success",
+        message: "Your email is already verified.",
       });
     }
 
@@ -22,19 +22,29 @@ exports.resendVerification = async (req, res, next) => {
       user.emailVerificationExpires &&
       user.emailVerificationExpires > Date.now() + 23 * 60 * 60 * 1000 // sent less than 1 hour ago
     ) {
-      return next(new AppError('A verification email was sent recently. Please wait before requesting another.', 429));
+      return next(
+        new AppError(
+          "A verification email was sent recently. Please wait before requesting another.",
+          429
+        )
+      );
     }
 
     const verificationToken = user.createEmailVerificationToken();
     await user.save({ validateBeforeSave: false });
 
-    sendEmail(user.email, 'emailVerification', user.name, verificationToken).catch(() => {});
+    sendEmail(
+      user.email,
+      "emailVerification",
+      user.name,
+      verificationToken
+    ).catch(() => {});
 
     logger.info(`Verification email resent to: ${user.email}`);
 
     res.status(200).json({
-      status: 'success',
-      message: 'Verification email sent. Please check your inbox.',
+      status: "success",
+      message: "Verification email sent. Please check your inbox.",
     });
   } catch (err) {
     next(err);

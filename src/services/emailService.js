@@ -543,7 +543,7 @@ const sendEmail = async (to, template, ...args) => {
   try {
     const { subject, html, text } = templates[template](...args);
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
+      host: process.env.SMTP_HOST,
       port: 465,
       secure: true,
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
