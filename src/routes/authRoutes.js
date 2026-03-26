@@ -13,7 +13,7 @@ const {
   forgotPasswordRules,
 } = require("../middleware/validate");
 
-// ── Public routes ────────────────────────────────────────
+//── Public routes ────────────────────────────────────────
 router.post(
   "/signup",
   authLimiter,

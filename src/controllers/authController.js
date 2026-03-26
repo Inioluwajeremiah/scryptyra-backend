@@ -10,7 +10,6 @@ const getIP = (req) =>
   req.ip || req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || "Unknown";
 
 // ── Controllers ──────────────────────────────────────────
-
 /**
  * POST /api/auth/signup
  */
@@ -77,13 +76,13 @@ exports.login = async (req, res, next) => {
     signAndSetCookie(res, user._id);
 
     // Send login alert email (non-blocking)
-    // sendEmail(
-    //   user.email,
-    //   "loginAlert",
-    //   user.name,
-    //   getIP(req),
-    //   req.headers["user-agent"]
-    // ).catch(() => {});
+    sendEmail(
+      user.email,
+      "loginAlert",
+      user.name,
+      getIP(req),
+      req.headers["user-agent"]
+    ).catch(() => {});
 
     logger.info(`User logged in: ${user.email} from ${getIP(req)}`);
 
