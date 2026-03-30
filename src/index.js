@@ -1,10 +1,11 @@
 require("dotenv").config();
+const express = require("express");
 
 const app = require("./app");
+const path = require("path");
 const connectDB = require("./config/db");
 const logger = require("./utils/logger");
 const { verifyEmailConnection } = require("./services/emailService");
-
 const PORT = process.env.PORT || 5000;
 
 // ── Graceful shutdown handler ────────────────────────────
@@ -19,6 +20,8 @@ const gracefulShutdown = (signal) => {
     process.exit(1);
   }, 10000);
 };
+
+app.use("/public", express.static(path.join(__dirname, "../public")));
 
 // ── Start ────────────────────────────────────────────────
 let server;
