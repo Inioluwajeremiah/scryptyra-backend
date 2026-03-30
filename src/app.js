@@ -4,6 +4,7 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 const mongoSanitize = require("express-mongo-sanitize");
+const path = require("path");
 
 const { apiLimiter } = require("./middleware/rateLimiter");
 const errorHandler = require("./middleware/errorHandler");
@@ -33,6 +34,9 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// serve public files
+app.use("/public", express.static(path.join(__dirname, "../public")));
 
 // ── Stripe webhook needs raw body — mount BEFORE express.json ──
 app.post(
